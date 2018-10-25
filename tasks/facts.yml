@@ -1,0 +1,25 @@
+---
+- name: Get istio release info
+  become: false
+  uri:
+    url: https://api.github.com/repos/istio/istio/releases/latest
+    headers:
+      Accept: 'application/vnd.github.v3+json'
+    return_content: yes
+  register: istio_release_info
+  changed_when: false
+
+- name: Get Available Istio Version
+  become: false
+  set_fact:
+    istio_version: "{{ istio_release_info.json.tag_name }}"
+  changed_when: false
+
+- name: Set Istio Download URL
+  become: false
+  vars:
+    linux_tarball_query: "assets[?name=='istio-{{ istio_version }}-linux.tar.gz'].browser_download_url"
+  set_fact:
+    istio_download_url: "{{ istio_release_info.json | json_query(linux_tarball_query) | first }}"
+  changed_when: false
+
